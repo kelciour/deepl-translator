@@ -176,9 +176,9 @@ class DeepLTranslator(QDialog):
 
         if not self.api_key:
             return showWarning(
-                "To use the add-on, you'll need an API authentication key (DeepL API Free). "
-                "To get a key and translate up to 500,000 characters/month for free, "
-                '<a href="https://www.deepl.com/pro#developer">create a DeepL Pro account here</a>.',
+                "To use the add-on and translate up to 500,000 characters/month for free, "
+                "you'll need an API authentication key. "
+                'To get a key, <a href="https://www.deepl.com/pro#developer">create an account with the DeepL API Free plan here</a>.',
                 title="DeepL Translator",
             )
 
