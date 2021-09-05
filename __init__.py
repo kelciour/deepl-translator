@@ -211,7 +211,7 @@ class DeepLTranslator(QDialog):
         if self.browser:
             self.browser.mw.progress.start(parent=self.browser)
             self.browser.mw.progress._win.setWindowIcon(QIcon(self.icon))
-            self.browser.mw.progress._win.setWindowTitle("Deepl Translator")
+            self.browser.mw.progress._win.setWindowTitle("DeepL Translator")
 
         progress = 0
 
