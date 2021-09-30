@@ -132,7 +132,7 @@ class DeepLTranslator(QDialog):
             try:
                 self.form.apiKeyBox.hide()
                 self.adjustSize()
-                self.translator = deepl.Translator(self.api_key)
+                self.translator = deepl.Translator(self.api_key, skip_language_check=True)
                 if self.browser:
                     self.usage = self.translator.get_usage()
             except Exception as e:
@@ -183,7 +183,7 @@ class DeepLTranslator(QDialog):
             )
 
         try:
-            self.translator = deepl.Translator(self.api_key)
+            self.translator = deepl.Translator(self.api_key, skip_language_check=True)
             self.translator.get_usage()
             self.config["API Key"] = self.api_key
         except deepl.exceptions.AuthorizationException:
