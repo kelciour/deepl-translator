@@ -120,6 +120,11 @@ class DeepLTranslator(QDialog):
             if self.config[key]:
                 cb.setCurrentIndex(cb.findText(self.config[key]))
 
+        if self.config["Strip HTML"]:
+            self.form.formatText.setChecked(True)
+        else:
+            self.form.formatHTML.setChecked(True)
+
         self.form.checkBoxOverwrite.setChecked(self.config["Overwrite"])
 
         self.api_key = self.config["API Key"]
@@ -159,6 +164,26 @@ class DeepLTranslator(QDialog):
             time.sleep(0.01)
             QApplication.instance().processEvents()
 
+    def escape_clozes(self, match):
+        self.cloze_id += 1
+        cloze_number = match.group('number')
+        cloze_text = match.group('text')
+        cloze_hint = match.group('hint')
+        self.cloze_deletions[self.cloze_id] = {
+            'number': cloze_number,
+            'hint': cloze_hint
+        }
+        return '<c id="{}">{}</c>'.format(self.cloze_id, cloze_text)
+
+    def unescape_clozes(self, match):
+        cloze = self.cloze_deletions[int(match.group('id'))]
+        txt = '{{'
+        txt += 'c{}::{}'.format(cloze['number'], match.group('text'))
+        if cloze['hint']:
+            txt += '::{}'.format(cloze['hint'])
+        txt += '}}'
+        return txt
+
     def accept(self):
         self.sourceField = self.form.sourceField.currentText()
         self.targetField = self.form.targetField.currentText()
@@ -170,6 +195,14 @@ class DeepLTranslator(QDialog):
         self.targetLang = self.form.targetLang.currentText()
 
         self.api_key = self.form.apiKey.text().strip()
+
+        self.split_sentences = "nonewlines"
+        self.outline_detection = False
+        self.non_splitting_tags = ["c"]
+        if self.config["Strip HTML"]:
+            self.tag_handling = None
+        else:
+            self.tag_handling = "xml"
 
         if not self.targetLang:
             return showWarning("Select target language")
@@ -200,7 +233,7 @@ class DeepLTranslator(QDialog):
 
         self.config["Source Language"] = self.sourceLang
         self.config["Target Language"] = self.targetLang
-
+        self.config["Strip HTML"] = self.form.formatText.isChecked()
         self.config["Overwrite"] = self.form.checkBoxOverwrite.isChecked()
 
         mw.addonManager.writeConfig(__name__, self.config)
@@ -232,50 +265,83 @@ class DeepLTranslator(QDialog):
                 if note[self.targetField] and not self.config["Overwrite"]:
                     continue
 
-                soup = BeautifulSoup(note[self.sourceField], "html.parser")
+                text = note[self.sourceField]
+                if self.config["Strip HTML"]:
+                    soup = BeautifulSoup(text, "html.parser")
+                    text = soup.get_text()
 
-                text = soup.get_text()
+                if not text:
+                    continue
 
-                text = re.sub(
-                    r"{{c(\d+)::(.*?)(::.*?)?}}", r"<c\1>\2</c>", text, flags=re.I
-                )
+                self.cloze_id = 0
+                self.cloze_deletions = {}
+                text = re.sub(r"{{c(?P<number>\d+)::(?P<text>.*?)(::(?P<hint>.*?))?}}", self.escape_clozes, text, flags=re.I)
+                self.cloze_hints = [c['hint'] for c in self.cloze_deletions.values() if c['hint']]
 
                 time_to_sleep = 1
 
                 self.total_count += len(text)
 
-                while True:
-                    if self.browser and self.browser.mw.progress._win.wantCancel:
+                translated_results = {}
+                for key, data in [("text", text), ("hints", self.cloze_hints)]:
+                    if key == "hints" and len(self.cloze_hints) == 0:
                         break
-                    try:
-                        if self.sourceLangCode == "AUTO":
-                            result = self.translator.translate_text(
-                                text, target_lang=self.targetLangCode
-                            )
-                        else:
-                            result = self.translator.translate_text(
-                                text,
-                                source_lang=self.sourceLangCode,
-                                target_lang=self.targetLangCode,
-                            )
-                        break
-                    except deepl.exceptions.TooManyRequestsException:
-                        if self.browser:
-                            self.browser.mw.progress.update(
-                                "Too many requests. Sleeping for {} seconds.".format(
-                                    time_to_sleep
+                    while True:
+                        if self.browser and self.browser.mw.progress._win.wantCancel:
+                            break
+                        try:
+                            if self.sourceLangCode == "AUTO":
+                                result = self.translator.translate_text(
+                                    data,
+                                    target_lang=self.targetLangCode,
+                                    tag_handling=self.tag_handling,
+                                    split_sentences=self.split_sentences,
+                                    outline_detection=self.outline_detection
                                 )
-                            )
-                            self.sleep(time_to_sleep)
-                            # https://support.deepl.com/hc/en-us/articles/360020710619-Error-code-429
-                            time_to_sleep *= 2
-                        else:
-                            showWarning(
-                                "Too many requests. Please wait and resend your request.",
-                                parent=self.parentWindow,
-                            )
+                            else:
+                                result = self.translator.translate_text(
+                                    data,
+                                    source_lang=self.sourceLangCode,
+                                    target_lang=self.targetLangCode,
+                                    tag_handling=self.tag_handling,
+                                    split_sentences=self.split_sentences,
+                                    outline_detection=self.outline_detection
+                                )
+                            translated_results[key] = result
+                            break
+                        except deepl.exceptions.TooManyRequestsException:
+                            if self.browser:
+                                self.browser.mw.progress.update(
+                                    "Too many requests. Sleeping for {} seconds.".format(
+                                        time_to_sleep
+                                    )
+                                )
+                                self.sleep(time_to_sleep)
+                                # https://support.deepl.com/hc/en-us/articles/360020710619-Error-code-429
+                                time_to_sleep *= 2
+                            else:
+                                showWarning(
+                                    "Too many requests. Please wait and resend your request.",
+                                    parent=self.parentWindow,
+                                )
 
-                note[self.targetField] = result.text
+                if self.cloze_hints:
+                    cloze_hints_translated = [tr.text for tr in translated_results["hints"]]
+                    assert len(self.cloze_hints) == len(cloze_hints_translated)
+                    hint_idx = 0
+                    for c in self.cloze_deletions.values():
+                        if c['hint']:
+                            c['hint'] = cloze_hints_translated[hint_idx]
+                            hint_idx += 1
+
+                text = translated_results["text"].text
+
+                text = re.sub(r' (<c id="\d+">) ', r' \1', text)
+                text = re.sub(r' (</c>) ', r'\1 ', text)
+                text = re.sub(r'<c id="(?P<id>\d+)">(?P<text>.*?)</c>', self.unescape_clozes, text)
+                text = re.sub(r' , ', ', ', text)
+
+                note[self.targetField] = text
 
                 if self.editor:
                     self.editor.setNote(note)

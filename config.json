@@ -4,5 +4,6 @@
 	"Source Language": "",
 	"Target Language": "",
 	"Overwrite": false,
+	"Strip HTML": true,
 	"API Key": ""
 }
