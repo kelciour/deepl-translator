@@ -1,3 +1,12 @@
+# External Libraries
 vendor/
+
+# Python
+__pycache__/
+*.pyc
+
+# Qt
 form.py
+
+# Anki
 meta.json
