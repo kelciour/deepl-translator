@@ -269,6 +269,11 @@ class DeepLTranslator(QDialog):
                 if self.config["Strip HTML"]:
                     soup = BeautifulSoup(text, "html.parser")
                     text = soup.get_text()
+                else:
+                    text = text.replace('&nbsp;', ' ')
+                    text = re.sub(r' +(</[^>]+>)', r'\1 ', text)
+                text = re.sub(r'\s+', ' ', text)
+                text = text.strip()
 
                 if not text:
                     continue
