@@ -173,7 +173,7 @@ class DeepLTranslator(QDialog):
             'number': cloze_number,
             'hint': cloze_hint
         }
-        return '<c id="{}">{}</c>'.format(self.cloze_id, cloze_text)
+        return ' <c{0}>{1}</c{0}> '.format(self.cloze_id, cloze_text)
 
     def unescape_clozes(self, match):
         cloze = self.cloze_deletions[int(match.group('id'))]
@@ -195,14 +195,6 @@ class DeepLTranslator(QDialog):
         self.targetLang = self.form.targetLang.currentText()
 
         self.api_key = self.form.apiKey.text().strip()
-
-        self.split_sentences = "nonewlines"
-        self.outline_detection = False
-        self.non_splitting_tags = ["c"]
-        if self.config["Strip HTML"]:
-            self.tag_handling = None
-        else:
-            self.tag_handling = "xml"
 
         if not self.targetLang:
             return showWarning("Select target language")
@@ -295,23 +287,24 @@ class DeepLTranslator(QDialog):
                         if self.browser and self.browser.mw.progress._win.wantCancel:
                             break
                         try:
-                            if self.sourceLangCode == "AUTO":
-                                result = self.translator.translate_text(
-                                    data,
-                                    target_lang=self.targetLangCode,
-                                    tag_handling=self.tag_handling,
-                                    split_sentences=self.split_sentences,
-                                    outline_detection=self.outline_detection
-                                )
+                            if self.sourceLangCode != "AUTO":
+                                source_lang = self.sourceLangCode
                             else:
-                                result = self.translator.translate_text(
-                                    data,
-                                    source_lang=self.sourceLangCode,
-                                    target_lang=self.targetLangCode,
-                                    tag_handling=self.tag_handling,
-                                    split_sentences=self.split_sentences,
-                                    outline_detection=self.outline_detection
-                                )
+                                source_lang = None
+                            target_lang = self.targetLangCode
+                            if not self.config["Strip HTML"]:
+                                tag_handling = "xml"
+                            else:
+                                tag_handling = None
+                            result = self.translator.translate_text(
+                                data,
+                                source_lang=source_lang,
+                                target_lang=target_lang,
+                                tag_handling=tag_handling,
+                                split_sentences="nonewlines",
+                                outline_detection=True,
+                                ignore_tags=["sub", "sup"],
+                            )
                             translated_results[key] = result
                             break
                         except deepl.exceptions.TooManyRequestsException:
@@ -341,9 +334,9 @@ class DeepLTranslator(QDialog):
 
                 text = translated_results["text"].text
 
-                text = re.sub(r' (<c id="\d+">) ', r' \1', text)
-                text = re.sub(r' (</c>) ', r'\1 ', text)
-                text = re.sub(r'<c id="(?P<id>\d+)">(?P<text>.*?)</c>', self.unescape_clozes, text)
+                text = re.sub(r' (<c\d+>) ', r' \1', text)
+                text = re.sub(r' (</c\d+>) ', r'\1 ', text)
+                text = re.sub(r'<c(?P<id>\d+)>(?P<text>.*?)</c(?P=id)>', self.unescape_clozes, text)
                 text = re.sub(r' , ', ', ', text)
 
                 note[self.targetField] = text
