@@ -396,12 +396,17 @@ def setupMenu(browser):
 addHook("browser.setupMenus", setupMenu)
 
 
+def onEditorButton(editor):
+    DeepLTranslator(editor)
+    return None
+
+
 def onSetupEditorButtons(buttons, editor):
     icon = os.path.join(os.path.dirname(__file__), "favicon.png")
     b = editor.addButton(
         icon,
         "DeepL Translator",
-        lambda e=editor: DeepLTranslator(e),
+        lambda e=editor: onEditorButton(e),
         tip="{}".format("DeepL Translator"),
     )
     buttons.append(b)
