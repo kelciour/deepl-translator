@@ -2,16 +2,19 @@ import os
 import re
 import sys
 import time
+import warnings
 
 from anki.hooks import addHook
 from aqt import mw
 from aqt.qt import *
 from aqt.utils import showInfo, showWarning, tooltip
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QDialog
 
 from . import form, lang
+
+warnings.filterwarnings('ignore', category=MarkupResemblesLocatorWarning)
 
 
 addon_dir = os.path.dirname(os.path.realpath(__file__))
