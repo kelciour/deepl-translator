@@ -9,10 +9,13 @@ from aqt import mw
 from aqt.qt import *
 from aqt.utils import showInfo, showWarning, tooltip
 from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication, QDialog
 
-from . import form, lang
+from . import lang
+
+try:
+    from . import form_qt6 as form
+except:
+    from . import form_qt5 as form
 
 warnings.filterwarnings('ignore', category=MarkupResemblesLocatorWarning)
 
