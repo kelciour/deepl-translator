@@ -1,5 +1,6 @@
 source_languages = [
     {'code': 'AUTO', 'name': 'Any language (detect)'},
+    {'code': 'AR', 'name': 'Arabic'},
     {'code': 'BG', 'name': 'Bulgarian'},
     {'code': 'ZH', 'name': 'Chinese'},
     {'code': 'CS', 'name': 'Czech'},
@@ -12,10 +13,13 @@ source_languages = [
     {'code': 'DE', 'name': 'German'},
     {'code': 'EL', 'name': 'Greek'},
     {'code': 'HU', 'name': 'Hungarian'},
+    {'code': 'ID', 'name': 'Indonesian'},
     {'code': 'IT', 'name': 'Italian'},
     {'code': 'JA', 'name': 'Japanese'},
+    {'code': 'KO', 'name': 'Korean'},
     {'code': 'LV', 'name': 'Latvian'},
     {'code': 'LT', 'name': 'Lithuanian'},
+    {'code': 'NB', 'name': 'Norwegian (Bokmål)'},
     {'code': 'PL', 'name': 'Polish'},
     {'code': 'PT', 'name': 'Portuguese'},
     {'code': 'RO', 'name': 'Romanian'},
@@ -23,12 +27,15 @@ source_languages = [
     {'code': 'SK', 'name': 'Slovak'},
     {'code': 'SL', 'name': 'Slovenian'},
     {'code': 'ES', 'name': 'Spanish'},
-    {'code': 'SV', 'name': 'Swedish'}
+    {'code': 'SV', 'name': 'Swedish'},
+    {'code': 'TR', 'name': 'Turkish'},
+    {'code': 'UK', 'name': 'Ukrainian'}
 ]
 
 target_languages = [
+    {'code': 'AR', 'name': 'Arabic'},
     {'code': 'BG', 'name': 'Bulgarian'},
-    {'code': 'ZH', 'name': 'Chinese'},
+    {'code': 'ZH', 'name': 'Chinese (simplified)'},
     {'code': 'CS', 'name': 'Czech'},
     {'code': 'DA', 'name': 'Danish'},
     {'code': 'NL', 'name': 'Dutch'},
@@ -40,10 +47,13 @@ target_languages = [
     {'code': 'DE', 'name': 'German'},
     {'code': 'EL', 'name': 'Greek'},
     {'code': 'HU', 'name': 'Hungarian'},
+    {'code': 'ID', 'name': 'Indonesian'},
     {'code': 'IT', 'name': 'Italian'},
     {'code': 'JA', 'name': 'Japanese'},
+    {'code': 'KO', 'name': 'Korean'},
     {'code': 'LV', 'name': 'Latvian'},
     {'code': 'LT', 'name': 'Lithuanian'},
+    {'code': 'NB', 'name': 'Norwegian (Bokmål)'},
     {'code': 'PL', 'name': 'Polish'},
     {'code': 'PT-BR', 'name': 'Portuguese (Brazilian)'},
     {'code': 'PT-PT', 'name': 'Portuguese (European)'},
@@ -52,5 +62,7 @@ target_languages = [
     {'code': 'SK', 'name': 'Slovak'},
     {'code': 'SL', 'name': 'Slovenian'},
     {'code': 'ES', 'name': 'Spanish'},
-    {'code': 'SV', 'name': 'Swedish'}
+    {'code': 'SV', 'name': 'Swedish'},
+    {'code': 'TR', 'name': 'Turkish'},
+    {'code': 'UK', 'name': 'Ukrainian'}
 ]
