@@ -282,9 +282,12 @@ class DeepLTranslator(QDialog):
                 if self.targetField not in note:
                     continue
                 if note[self.targetField] and not self.config["Overwrite"]:
+                    if self.editor:
+                        tooltip('The field is not empty.')
                     continue
 
                 text = note[self.sourceField]
+                text = re.sub(r'\[sound:.*?\]', '', text)
                 if self.config["Strip HTML"]:
                     soup = BeautifulSoup(text, "html.parser")
                     text = soup.get_text()
