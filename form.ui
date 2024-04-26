@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>409</width>
-    <height>160</height>
+    <width>428</width>
+    <height>213</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -268,6 +268,21 @@
        </property>
       </spacer>
      </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <widget class="QCheckBox" name="checkBoxDialogVisibility">
+       <property name="text">
+        <string>Don't show dialog box (one-click fill)</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
      <item>
       <widget class="QLabel" name="usage">
        <property name="font">

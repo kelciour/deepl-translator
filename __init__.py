@@ -47,8 +47,11 @@ class DeepLTranslator(QDialog):
 
         QDialog.__init__(self, self.parentWindow)
 
-        self.form = form.Ui_Dialog()
-        self.form.setupUi(self)
+        self.icon = os.path.join(os.path.dirname(__file__), "favicon.png")
+        self.setWindowIcon(QIcon(self.icon))
+
+        self.config = mw.addonManager.getConfig(__name__)
+        self.api_key = self.config["API Key"]
 
         self.sourceLanguages = {}
         for x in lang.source_languages:
@@ -59,6 +62,17 @@ class DeepLTranslator(QDialog):
         for x in lang.target_languages:
             assert x["name"] not in self.targetLanguages, x["name"]
             self.targetLanguages[x["name"]] = x["code"]
+
+        if self.editor and self.config["~ Don't show dialog box in editor"] and self.api_key and \
+            self.config["Source Field"] in self.note and self.config["Target Field"] in self.note:
+            self.translate()
+        else:
+            self.setupUI()
+            self.show()
+
+    def setupUI(self):
+        self.form = form.Ui_Dialog()
+        self.form.setupUi(self)
 
         self.form.sourceLang.addItems(self.sourceLanguages)
 
@@ -101,7 +115,7 @@ class DeepLTranslator(QDialog):
         self.form.targetLang.currentIndexChanged.connect(updateSourceLang)
 
         if not self.note:
-            self.note = mw.col.getNote(nids[0])
+            self.note = mw.col.getNote(self.nids[0])
         fields = self.note.keys()
 
         self.form.sourceField.addItems(fields)
@@ -109,8 +123,6 @@ class DeepLTranslator(QDialog):
 
         self.form.targetField.addItems(fields)
         self.form.targetField.setCurrentIndex(len(fields) - 1)
-
-        self.config = mw.addonManager.getConfig(__name__)
 
         for fld, cb in [
             ("Source Field", self.form.sourceField),
@@ -133,7 +145,9 @@ class DeepLTranslator(QDialog):
 
         self.form.checkBoxOverwrite.setChecked(self.config["Overwrite"])
 
-        self.api_key = self.config["API Key"]
+        self.form.checkBoxDialogVisibility.setChecked(self.config["~ Don't show dialog box in editor"])
+        if self.browser and self.config["~ Don't show dialog box in editor"] == False:
+            self.form.checkBoxDialogVisibility.hide()
 
         self.form.apiKey.setText(self.api_key)
 
@@ -143,14 +157,11 @@ class DeepLTranslator(QDialog):
             try:
                 self.form.apiKeyBox.hide()
                 self.adjustSize()
-                self.translator = deepl.Translator(self.api_key, skip_language_check=True)
                 if self.browser:
+                    self.translator = deepl.Translator(self.api_key, skip_language_check=True)
                     self.usage = self.translator.get_usage()
             except Exception as e:
                 pass
-
-        self.icon = os.path.join(os.path.dirname(__file__), "favicon.png")
-        self.setWindowIcon(QIcon(self.icon))
 
         if self.usage:
             self.usage.character.limit_exceeded
@@ -161,8 +172,6 @@ class DeepLTranslator(QDialog):
             )
         else:
             self.form.usage.setText("")
-
-        self.show()
 
     def sleep(self, seconds):
         start = time.time()
@@ -227,17 +236,29 @@ class DeepLTranslator(QDialog):
         except:
             raise
 
-        QDialog.accept(self)
-
         self.config["Source Language"] = self.sourceLang
         self.config["Target Language"] = self.targetLang
         self.config["Strip HTML"] = self.form.formatText.isChecked()
         self.config["Overwrite"] = self.form.checkBoxOverwrite.isChecked()
+        self.config["~ Don't show dialog box in editor"] = self.form.checkBoxDialogVisibility.isChecked()
 
         mw.addonManager.writeConfig(__name__, self.config)
 
+        QDialog.accept(self)
+
+        self.translate()
+
+    def translate(self):
+        self.sourceField = self.config["Source Field"]
+        self.targetField = self.config["Target Field"]
+
+        self.sourceLang = self.config["Source Language"]
+        self.targetLang = self.config["Target Language"]
+
         self.sourceLangCode = self.sourceLanguages[self.sourceLang]
         self.targetLangCode = self.targetLanguages[self.targetLang]
+
+        self.translator = deepl.Translator(self.api_key, skip_language_check=True)
 
         if self.browser:
             self.browser.mw.progress.start(parent=self.browser)
